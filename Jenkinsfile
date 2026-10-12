@@ -17,13 +17,17 @@ pipeline {
                 echo "Image: ${env.FULL_IMAGE}"
             }
         }
-
         stage('Check Docker') {
+            
             steps {
-                bat '"%DOCKER_EXE%" --version'
-                bat '"%DOCKER_EXE%" info'
+                bat 'where docker'
+                bat 'docker --version'
+        
             }
         }
+
+    
+}
 
         stage('Docker Login') {
             steps {
