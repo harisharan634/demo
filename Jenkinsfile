@@ -2,7 +2,6 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_EXE = 'C:/Users/harih/AppData/Local/Programs/DockerDesktop/resources/bin/docker.exe'
         IMAGE_NAME = 'harisharan634/hello'
     }
 
@@ -11,17 +10,20 @@ pipeline {
         stage('Generate Image Tag') {
             steps {
                 script {
-                    env.IMAGE_TAG = new Date().format('yyyy-MM-dd-HHmmss')
+                    env.IMAGE_TAG  = new Date().format('yyyy-MM-dd-HHmmss')
                     env.FULL_IMAGE = "${env.IMAGE_NAME}:${env.IMAGE_TAG}"
                 }
-
                 echo "Image: ${env.FULL_IMAGE}"
             }
         }
 
         stage('Check Docker') {
             steps {
-                bat '"%DOCKER_EXE%" --version'
+                bat '''
+                    @echo off
+                    where docker
+                    docker --version
+                '''
             }
         }
 
@@ -36,7 +38,7 @@ pipeline {
                 ]) {
                     bat '''
                         @echo off
-                        echo %DOCKER_PASSWORD% | "%DOCKER_EXE%" login -u "%DOCKER_USERNAME%" --password-stdin
+                        echo|set /p="%DOCKER_PASSWORD%"| docker login -u "%DOCKER_USERNAME%" --password-stdin
                     '''
                 }
             }
@@ -44,24 +46,26 @@ pipeline {
 
         stage('Docker Build') {
             steps {
-                bat '"%DOCKER_EXE%" build -t "%FULL_IMAGE%" .'
+                bat 'docker build -t "%FULL_IMAGE%" .'
             }
         }
 
         stage('Docker Push') {
             steps {
-                bat '"%DOCKER_EXE%" push "%FULL_IMAGE%"'
+                bat 'docker push "%FULL_IMAGE%"'
             }
         }
     }
 
     post {
+        always {
+            bat 'docker logout'
+        }
         success {
             echo "Successfully pushed ${env.FULL_IMAGE}"
         }
-
         failure {
-            echo "Pipeline failed. Check the console output."
+            echo 'Pipeline failed. Check the console output.'
         }
     }
 }
