@@ -14,32 +14,16 @@ pipeline {
                     env.FULL_IMAGE = "${env.IMAGE_NAME}:${env.IMAGE_TAG}"
                 }
 
-                echo "Docker image: ${env.FULL_IMAGE}"
+                echo "Image: ${env.FULL_IMAGE}"
             }
         }
 
-        stage('Diagnose Docker') {
-    steps {
-        bat '''
-            @echo off
-            echo ===== Jenkins account =====
-            whoami
-
-            echo ===== Docker executable =====
-            if exist "C:\\Users\\hari\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe" (
-                echo Docker executable exists
-            ) else (
-                echo Docker executable NOT FOUND
-            )
-
-            echo ===== Docker version =====
-            "C:\\Users\\hari\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe" --version
-
-            echo ===== Docker engine =====
-            "C:\\Users\\hari\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe" info
-        '''
-    }
-}
+        stage('Check Docker') {
+            steps {
+                bat '"%DOCKER_EXE%" --version'
+                bat '"%DOCKER_EXE%" info'
+            }
+        }
 
         stage('Docker Login') {
             steps {
@@ -73,11 +57,11 @@ pipeline {
 
     post {
         success {
-            echo "SUCCESS: Image pushed: ${env.FULL_IMAGE}"
+            echo "Successfully pushed ${env.FULL_IMAGE}"
         }
 
         failure {
-            echo 'FAILED: Check the Jenkins console output.'
+            echo 'Pipeline failed. Check the console output.'
         }
     }
 }
