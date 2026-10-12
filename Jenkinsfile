@@ -1,10 +1,10 @@
 pipeline {
     agent any
 
-   environment {
-    DOCKER_EXE = 'C:\\ACTUAL\\PATH\\TO\\docker.exe'
-    IMAGE_NAME = 'harisharan634/hello'
-}
+    environment {
+        DOCKER_EXE = 'C:\\Users\\hari\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe'
+        IMAGE_NAME = 'harisharan634/hello'
+    }
 
     stages {
         stage('Generate Image Tag') {
@@ -14,14 +14,20 @@ pipeline {
                     env.FULL_IMAGE = "${env.IMAGE_NAME}:${env.IMAGE_TAG}"
                 }
 
-                echo "Image: ${env.FULL_IMAGE}"
+                echo "Docker image: ${env.FULL_IMAGE}"
             }
         }
 
         stage('Check Docker') {
             steps {
-                bat '"%DOCKER_EXE%" --version'
-                bat '"%DOCKER_EXE%" info'
+                bat '''
+                    if not exist "%DOCKER_EXE%" (
+                        echo ERROR: Docker executable not found at %DOCKER_EXE%
+                        exit /b 1
+                    )
+                    "%DOCKER_EXE%" --version
+                    "%DOCKER_EXE%" info
+                '''
             }
         }
 
@@ -57,11 +63,11 @@ pipeline {
 
     post {
         success {
-            echo "Successfully pushed ${env.FULL_IMAGE}"
+            echo "SUCCESS: Image pushed: ${env.FULL_IMAGE}"
         }
 
         failure {
-            echo 'Pipeline failed. Check the console output.'
+            echo 'FAILED: Check the Jenkins console output.'
         }
     }
 }
