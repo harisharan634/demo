@@ -1,10 +1,10 @@
 pipeline {
     agent any
 
-    environment {
-        DOCKER_EXE = 'C:\\Users\\hari\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe'
-        IMAGE_NAME = 'harisharan634/hello'
-    }
+   environment {
+    DOCKER_EXE = 'C:\\ACTUAL\\PATH\\TO\\docker.exe'
+    IMAGE_NAME = 'harisharan634/hello'
+}
 
     stages {
         stage('Generate Image Tag') {
