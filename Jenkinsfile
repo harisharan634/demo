@@ -3,6 +3,7 @@ pipeline {
 
     environment {
         IMAGE_NAME = 'harisharan634/hello'
+        PATH = "C:\\Users\\harih\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin;${env.PATH}"
     }
 
     stages {
@@ -59,7 +60,7 @@ pipeline {
 
     post {
         always {
-            bat 'docker logout'
+            bat 'docker logout || exit 0'
         }
         success {
             echo "Successfully pushed ${env.FULL_IMAGE}"
