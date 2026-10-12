@@ -18,18 +18,28 @@ pipeline {
             }
         }
 
-        stage('Check Docker') {
-            steps {
-                bat '''
-                    if not exist "%DOCKER_EXE%" (
-                        echo ERROR: Docker executable not found at %DOCKER_EXE%
-                        exit /b 1
-                    )
-                    "%DOCKER_EXE%" --version
-                    "%DOCKER_EXE%" info
-                '''
-            }
-        }
+        stage('Diagnose Docker') {
+    steps {
+        bat '''
+            @echo off
+            echo ===== Jenkins account =====
+            whoami
+
+            echo ===== Docker executable =====
+            if exist "C:\\Users\\hari\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe" (
+                echo Docker executable exists
+            ) else (
+                echo Docker executable NOT FOUND
+            )
+
+            echo ===== Docker version =====
+            "C:\\Users\\hari\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe" --version
+
+            echo ===== Docker engine =====
+            "C:\\Users\\hari\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe" info
+        '''
+    }
+}
 
         stage('Docker Login') {
             steps {
