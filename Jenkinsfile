@@ -1,38 +1,63 @@
 pipeline {
-agent any
+    agent any
+
     environment {
-        image_name = "harisharan634/hello:v1"
+        IMAGE_NAME = 'harisharan634/hello'
     }
+
     stages {
-        stage("git-checkout") {
+        stage('Git Checkout') {
             steps {
                 checkout scm
             }
         }
-        stage("image-build") {
+
+        stage('Docker Build') {
             steps {
                 script {
-                    env.image_tag = new Date().format("yyyy-MM-dd-HHmmss")
-                    env.full_image = "${env.image_name}:${env.image_tag}"
+                    env.IMAGE_TAG = new Date().format('yyyy-MM-dd-HHmmss')
+                    env.FULL_IMAGE = "${env.IMAGE_NAME}:${env.IMAGE_TAG}"
+                }
+
+                bat 'docker build -t %FULL_IMAGE% .'
+            }
+        }
+
+        stage('Docker Login') {
+            steps {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'docker_cred',
+                        usernameVariable: 'DOCKER_USERNAME',
+                        passwordVariable: 'DOCKER_PASSWORD'
+                    )
+                ]) {
+                    bat '''
+                        @echo off
+                        echo %DOCKER_PASSWORD% | docker login -u %DOCKER_USERNAME% --password-stdin
+                    '''
                 }
             }
         }
-        stage("docker login") {
+
+        stage('Docker Push') {
             steps {
-                script {
-                    withCredentials([usernamePassword(credentialsId: 'docker_cred', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-                        bat "docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}"
-                    }
-                }
+                bat 'docker push %FULL_IMAGE%'
             }
         }
-        stage("docker push") {
-            steps {
-                script {
-                    bat "docker build -t ${env.full_image} ."
-                    bat "docker push ${env.full_image}"
-                }
-            }
+    }
+
+    post {
+        success {
+            echo "Successfully pushed ${env.FULL_IMAGE}"
+        }
+
+        failure {
+            echo 'Pipeline failed. Check the Jenkins console output.'
+        }
+
+        always {
+            bat 'docker logout'
         }
     }
 }
