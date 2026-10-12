@@ -2,6 +2,7 @@ pipeline {
     agent any
 
     environment {
+        DOCKER_EXE = 'C:/Users/harih/AppData/Local/Programs/DockerDesktop/resources/bin/docker.exe'
         IMAGE_NAME = 'harisharan634/hello'
     }
 
@@ -20,11 +21,7 @@ pipeline {
 
         stage('Check Docker') {
             steps {
-                bat '''
-                    @echo off
-                    where docker
-                    docker --version
-                '''
+                bat '"%DOCKER_EXE%" --version'
             }
         }
 
@@ -39,7 +36,7 @@ pipeline {
                 ]) {
                     bat '''
                         @echo off
-                        echo %DOCKER_PASSWORD% | docker login -u "%DOCKER_USERNAME%" --password-stdin
+                        echo %DOCKER_PASSWORD% | "%DOCKER_EXE%" login -u "%DOCKER_USERNAME%" --password-stdin
                     '''
                 }
             }
@@ -47,13 +44,13 @@ pipeline {
 
         stage('Docker Build') {
             steps {
-                bat 'docker build -t "%FULL_IMAGE%" .'
+                bat '"%DOCKER_EXE%" build -t "%FULL_IMAGE%" .'
             }
         }
 
         stage('Docker Push') {
             steps {
-                bat 'docker push "%FULL_IMAGE%"'
+                bat '"%DOCKER_EXE%" push "%FULL_IMAGE%"'
             }
         }
     }
@@ -64,7 +61,7 @@ pipeline {
         }
 
         failure {
-            echo 'Pipeline failed. Check the console output.'
+            echo "Pipeline failed. Check the console output."
         }
     }
 }
