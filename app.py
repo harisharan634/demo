@@ -4,7 +4,7 @@ app = Flask(__name__)
 
 @app.route("/")
 def hello():
-    return "Hello vishal this is final hello project!"                   
+    return "Hello hari this is final hello project!"                   
 @app.route("/new")
 def new():
     return "FINAL CHECK"            
