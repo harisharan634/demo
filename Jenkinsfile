@@ -2,11 +2,11 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_EXE = 'C:\\Users\\hari\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe'
         IMAGE_NAME = 'harisharan634/hello'
     }
 
     stages {
+
         stage('Generate Image Tag') {
             steps {
                 script {
@@ -17,17 +17,16 @@ pipeline {
                 echo "Image: ${env.FULL_IMAGE}"
             }
         }
+
         stage('Check Docker') {
-            
             steps {
-                bat 'where docker'
-                bat 'docker --version'
-        
+                bat '''
+                    @echo off
+                    where docker
+                    docker --version
+                '''
             }
         }
-
-    
-}
 
         stage('Docker Login') {
             steps {
@@ -40,7 +39,7 @@ pipeline {
                 ]) {
                     bat '''
                         @echo off
-                        echo %DOCKER_PASSWORD% | "%DOCKER_EXE%" login -u "%DOCKER_USERNAME%" --password-stdin
+                        echo %DOCKER_PASSWORD% | docker login -u "%DOCKER_USERNAME%" --password-stdin
                     '''
                 }
             }
@@ -48,13 +47,13 @@ pipeline {
 
         stage('Docker Build') {
             steps {
-                bat '"%DOCKER_EXE%" build -t "%FULL_IMAGE%" .'
+                bat 'docker build -t "%FULL_IMAGE%" .'
             }
         }
 
         stage('Docker Push') {
             steps {
-                bat '"%DOCKER_EXE%" push "%FULL_IMAGE%"'
+                bat 'docker push "%FULL_IMAGE%"'
             }
         }
     }
