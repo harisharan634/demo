@@ -2,23 +2,11 @@ pipeline {
     agent any
 
     environment {
+        DOCKER_EXE = 'C:\\Users\\hari\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe'
         IMAGE_NAME = 'harisharan634/hello'
     }
 
     stages {
-        stage('Git Checkout') {
-            steps {
-                checkout scm
-            }
-        }
-
-        stage('Check Docker') {
-            steps {
-                bat 'docker --version'
-                bat 'docker info'
-            }
-        }
-
         stage('Generate Image Tag') {
             steps {
                 script {
@@ -26,7 +14,14 @@ pipeline {
                     env.FULL_IMAGE = "${env.IMAGE_NAME}:${env.IMAGE_TAG}"
                 }
 
-                echo "Image to build: ${env.FULL_IMAGE}"
+                echo "Image: ${env.FULL_IMAGE}"
+            }
+        }
+
+        stage('Check Docker') {
+            steps {
+                bat '"%DOCKER_EXE%" --version'
+                bat '"%DOCKER_EXE%" info'
             }
         }
 
@@ -41,21 +36,21 @@ pipeline {
                 ]) {
                     bat '''
                         @echo off
-                        docker login -u "%DOCKER_USERNAME%" --password-stdin
-                    ''' 
+                        echo %DOCKER_PASSWORD% | "%DOCKER_EXE%" login -u "%DOCKER_USERNAME%" --password-stdin
+                    '''
                 }
             }
         }
 
         stage('Docker Build') {
             steps {
-                bat 'docker build -t "%FULL_IMAGE%" .'
+                bat '"%DOCKER_EXE%" build -t "%FULL_IMAGE%" .'
             }
         }
 
         stage('Docker Push') {
             steps {
-                bat 'docker push "%FULL_IMAGE%"'
+                bat '"%DOCKER_EXE%" push "%FULL_IMAGE%"'
             }
         }
     }
@@ -67,10 +62,6 @@ pipeline {
 
         failure {
             echo 'Pipeline failed. Check the console output.'
-        }
-
-        always {
-            bat 'docker logout'
         }
     }
 }
