@@ -53,7 +53,11 @@ pipeline {
 
         stage('Docker Push') {
             steps {
-                bat 'docker push "%FULL_IMAGE%"'
+                
+                retry(3) {
+                    
+                    bat 'docker push "%FULL_IMAGE%"'
+                }
             }
         }
     }
