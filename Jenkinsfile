@@ -12,14 +12,21 @@ pipeline {
             }
         }
 
-        stage('Docker Build') {
+        stage('Check Docker') {
+            steps {
+                bat 'docker --version'
+                bat 'docker info'
+            }
+        }
+
+        stage('Generate Image Tag') {
             steps {
                 script {
                     env.IMAGE_TAG = new Date().format('yyyy-MM-dd-HHmmss')
                     env.FULL_IMAGE = "${env.IMAGE_NAME}:${env.IMAGE_TAG}"
                 }
 
-                bat 'docker build -t %FULL_IMAGE% .'
+                echo "Image to build: ${env.FULL_IMAGE}"
             }
         }
 
@@ -34,15 +41,21 @@ pipeline {
                 ]) {
                     bat '''
                         @echo off
-                        echo %DOCKER_PASSWORD% | docker login -u %DOCKER_USERNAME% --password-stdin
-                    '''
+                        docker login -u "%DOCKER_USERNAME%" --password-stdin
+                    ''' 
                 }
+            }
+        }
+
+        stage('Docker Build') {
+            steps {
+                bat 'docker build -t "%FULL_IMAGE%" .'
             }
         }
 
         stage('Docker Push') {
             steps {
-                bat 'docker push %FULL_IMAGE%'
+                bat 'docker push "%FULL_IMAGE%"'
             }
         }
     }
@@ -53,7 +66,7 @@ pipeline {
         }
 
         failure {
-            echo 'Pipeline failed. Check the Jenkins console output.'
+            echo 'Pipeline failed. Check the console output.'
         }
 
         always {
