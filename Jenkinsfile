@@ -1,38 +1,76 @@
 pipeline {
-agent any
+    agent any
+
     environment {
-        image_name = "harisharan634/hello:v1"
+        IMAGE_NAME = 'harisharan634/hello'
+        PATH = "C:\\Users\\harih\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin;${env.PATH}"
     }
+
     stages {
-        stage("git-checkout") {
-            steps {
-                checkout scm
-            }
-        }
-        stage("image-build") {
+
+        stage('Generate Image Tag') {
             steps {
                 script {
-                    env.image_tag = new Date().format("yyyy-MM-dd-HHmmss")
-                    env.full_image = "${env.image_name}:${env.image_tag}"
+                    env.IMAGE_TAG  = new Date().format('yyyy-MM-dd-HHmmss')
+                    env.FULL_IMAGE = "${env.IMAGE_NAME}:${env.IMAGE_TAG}"
+                }
+                echo "Image: ${env.FULL_IMAGE}"
+            }
+        }
+
+        stage('Check Docker') {
+            steps {
+                bat '''
+                    @echo off
+                    where docker
+                    docker --version
+                '''
+            }
+        }
+
+        stage('Docker Login') {
+            steps {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'docker_cred',
+                        usernameVariable: 'DOCKER_USERNAME',
+                        passwordVariable: 'DOCKER_PASSWORD'
+                    )
+                ]) {
+                    bat '''
+                        @echo off
+                        echo|set /p="%DOCKER_PASSWORD%"| docker login -u "%DOCKER_USERNAME%" --password-stdin
+                    '''
                 }
             }
         }
-        stage("docker login") {
+
+        stage('Docker Build') {
             steps {
-                script {
-                    withCredentials([usernamePassword(credentialsId: 'docker_cred', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-                        bat "docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}"
-                    }
+                bat 'docker build -t "%FULL_IMAGE%" .'
+            }
+        }
+
+        stage('Docker Push') {
+            steps {
+                
+                retry(3) {
+                    
+                    bat 'docker push "%FULL_IMAGE%"'
                 }
             }
         }
-        stage("docker push") {
-            steps {
-                script {
-                    bat "docker build -t ${env.full_image} ."
-                    bat "docker push ${env.full_image}"
-                }
-            }
+    }
+
+    post {
+        always {
+            bat 'docker logout || exit 0'
+        }
+        success {
+            echo "Successfully pushed ${env.FULL_IMAGE}"
+        }
+        failure {
+            echo 'Pipeline failed. Check the console output.'
         }
     }
 }
